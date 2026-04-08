@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin â Programa Despachos Palta</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Segoe UI',system-ui,sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh;display:flex;flex-direction:column;align-items:center}
+  header{width:100%;background:linear-gradient(135deg,#1e3a5f 0%,#7c3aed 100%);padding:24px 32px;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,.4)}
+  header h1{font-size:1.6rem;font-weight:800;color:#fff}
+  header p{font-size:.85rem;color:rgba(255,255,255,.7);margin-top:4px}
+  .main{max-width:700px;width:100%;padding:32px 20px}
+
+  /* Config */
+  .config-card{background:#1e293b;border-radius:16px;padding:24px;margin-bottom:24px;border:1px solid #334155}
+  .config-card h2{font-size:1rem;font-weight:700;color:#a78bfa;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+  .field{margin-bottom:14px}
+  .field label{display:block;font-size:.78rem;font-weight:600;color:#94a3b8;margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em}
+  .field input{width:100%;padding:10px 14px;border:1.5px solid #334155;border-radius:10px;background:#0f172a;color:#e2e8f0;font-size:.88rem;outline:none;transition:border .2s}
+  .field input:focus{border-color:#7c3aed}
+  .field .hint{font-size:.72rem;color:#64748b;margin-top:4px}
+  .btn-save{background:#7c3aed;color:#fff;border:none;border-radius:10px;padding:10px 24px;font-size:.85rem;font-weight:700;cursor:pointer;transition:all .2s}
+  .btn-save:hover{background:#6d28d9;transform:translateY(-1px)}
+  .saved-indicator{display:inline-block;margin-left:12px;font-size:.82rem;color:#22c55e;opacity:0;transition:opacity .3s}
+  .saved-indicator.show{opacity:1}
+
+  /* Upload */
+  .upload-card{background:#1e293b;border-radius:16px;padding:24px;margin-bottom:24px;border:1px solid #334155}
+  .upload-card h2{font-size:1rem;font-weight:700;color:#38bdf8;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+  .drop-zone{border:2px dashed #334155;border-radius:14px;padding:48px 24px;text-align:center;cursor:pointer;transition:all .3s;background:rgba(15,23,42,.5)}
+  .drop-zone:hover,.drop-zone.dragover{border-color:#38bdf8;background:rgba(56,189,248,.05)}
+  .drop-zone .icon{font-size:3rem;margin-bottom:12px}
+  .drop-zone p{font-size:.88rem;color:#94a3b8}
+  .drop-zone .small{font-size:.75rem;color:#475569;margin-top:8px}
+  input[type=file]{display:none}
+
+  /* Preview */
+  .preview-card{background:#1e293b;border-radius:16px;padding:24px;margin-bottom:24px;border:1px solid #334155;display:none}
+  .preview-card.show{display:block}
+  .preview-card h2{font-size:1rem;font-weight:700;color:#22c55e;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+  .stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px}
+  .stat{background:#0f172a;border-radius:10px;padding:14px;text-align:center;border:1px solid #1e293b}
+  .stat .val{font-size:1.6rem;font-weight:800;color:#38bdf8}
+  .stat .lbl{font-size:.72rem;color:#64748b;text-transform:uppercase;margin-top:2px}
+  .preview-table{max-height:260px;overflow:auto;border-radius:8px;border:1px solid #334155}
+  .preview-table table{width:100%;border-collapse:collapse;font-size:.75rem}
+  .preview-table th{background:#1e293b;color:#94a3b8;padding:8px;text-align:left;position:sticky;top:0;font-weight:600}
+  .preview-table td{padding:6px 8px;border-top:1px solid #1e293b;color:#cbd5e1}
+
+  /* Send button */
+  .btn-send{width:100%;padding:16px;background:linear-gradient(135deg,#16a34a,#22c55e);color:#fff;border:none;border-radius:14px;font-size:1.05rem;font-weight:800;cursor:pointer;transition:all .3s;display:none;letter-spacing:.02em}
+  .btn-send.show{display:block}
+  .btn-send:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(34,197,94,.3)}
+  .btn-send:disabled{background:#334155;color:#64748b;cursor:not-allowed;transform:none;box-shadow:none}
+
+  /* Status */
+  .status{margin-top:16px;padding:14px;border-radius:10px;font-size:.85rem;display:none;font-weight:600}
+  .status.show{display:block}
+  .status.success{background:rgba(34,197,94,.15);color:#22c55e;border:1px solid rgba(34,197,94,.3)}
+  .status.error{background:rgba(239,68,68,.15);color:#ef4444;border:1px solid rgba(239,68,68,.3)}
+  .status.loading{background:rgba(56,189,248,.15);color:#38bdf8;border:1px solid rgba(56,189,248,.3)}
+
+  /* Spinner */
+  .spinner{display:inline-block;width:18px;height:18px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:8px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  /* Footer */
+  .footer{text-align:center;padding:20px;font-size:.72rem;color:#475569}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>ð Panel Admin â Despachos Palta MarÃ­timo</h1>
+  <p>Sube tu programa Excel y actualiza el dashboard en tiempo real</p>
+</header>
+
+<div class="main">
+
+  <!-- Config -->
+  <div class="config-card">
+    <h2>âï¸ ConfiguraciÃ³n</h2>
+    <div class="field">
+      <label>URL del Apps Script (Web App)</label>
+      <input type="text" id="scriptUrl" placeholder="https://script.google.com/macros/s/XXXXX/exec">
+      <div class="hint">Pegar la URL que obtuviste al desplegar el Apps Script como Web App</div>
+    </div>
+    <div class="field">
+      <label>ContraseÃ±a de Admin</label>
+      <input type="password" id="password" placeholder="Tu contraseÃ±a configurada en el script" value="fruglobe2026">
+    </div>
+    <button class="btn-save" onclick="saveConfig()">ð¾ Guardar configuraciÃ³n</button>
+    <span class="saved-indicator" id="savedMsg">â Guardado</span>
+  </div>
+
+  <!-- Upload -->
+  <div class="upload-card">
+    <h2>ð¤ Subir Programa Excel</h2>
+    <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+      <div class="icon">ð</div>
+      <p>Arrastra tu archivo Excel aquÃ­ o haz clic para seleccionar</p>
+      <div class="small">Programa despachos PALTA MARÃTIMO 2026 - Semana XX.xlsx</div>
+    </div>
+    <input type="file" id="fileInput" accept=".xlsx,.xls" onchange="handleFile(event)">
+  </div>
+
+  <!-- Preview -->
+  <div class="preview-card" id="previewCard">
+    <h2>ð Vista Previa de Datos</h2>
+    <div class="stats">
+      <div class="stat"><div class="val" id="pvTotal">0</div><div class="lbl">Total FCL</div></div>
+      <div class="stat"><div class="val" id="pvSemanas">0</div><div class="lbl">Semanas</div></div>
+      <div class="stat"><div class="val" id="pvDestinos">0</div><div class="lbl">Destinos</div></div>
+    </div>
+    <div id="fileName" style="font-size:.82rem;color:#94a3b8;margin-bottom:12px"></div>
+    <div class="preview-table" id="previewTable"></div>
+  </div>
+
+  <!-- Send -->
+  <button class="btn-send" id="btnSend" onclick="sendData()">
+    ð Actualizar Dashboard en Tiempo Real
+  </button>
+
+  <!-- Status -->
+  <div class="status" id="statusMsg"></div>
+
+</div>
+
+<div class="footer">FRUGLOBE / AVOGLOBE â Sistema de Despachos MarÃ­timos 2026</div>
+
+<script>
+// State
+let parsedHeaders = [];
+let parsedRows = [];
+
+// Config persistence
+function saveConfig() {
+  const url = document.getElementById('scriptUrl').value.trim();
+  const pw = document.getElementById('password').value;
+  if (url) localStorage.setItem('admin_script_url', url);
+  if (pw) localStorage.setItem('admin_password', pw);
+  const msg = document.getElementById('savedMsg');
+  msg.classList.add('show');
+  setTimeout(() => msg.classList.remove('show'), 2000);
+}
+
+function loadConfig() {
+  const url = localStorage.getItem('admin_script_url');
+  const pw = localStorage.getItem('admin_password');
+  if (url) document.getElementById('scriptUrl').value = url;
+  if (pw) document.getElementById('password').value = pw;
+}
+
+// Drag and drop
+const dropZone = document.getElementById('dropZone');
+dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+dropZone.addEventListener('drop', (e) => {
+  e.preventDefault();
+  dropZone.classList.remove('dragover');
+  if (e.dataTransfer.files.length) processFile(e.dataTransfer.files[0]);
+});
+
+function handleFile(e) {
+  if (e.target.files.length) processFile(e.target.files[0]);
+}
+
+function processFile(file) {
+  if (!file.name.match(/\.xlsx?$/i)) {
+    showStatus('Solo se aceptan archivos .xlsx', 'error');
+    return;
+  }
+
+  document.getElementById('fileName').textContent = 'ð ' + file.name;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+
+      // Leer hoja PD MarÃ­timo
+      const sheetName = workbook.SheetNames.find(n => n.includes('PD Mar')) || workbook.SheetNames[0];
+      const sheet = workbook.Sheets[sheetName];
+
+      // Convertir a JSON con header en fila 2 (index 1)
+      const rawJson = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '', raw: false });
+
+      if (rawJson.length < 3) {
+        showStatus('El archivo no tiene suficientes datos', 'error');
+        return;
+      }
+
+      // Fila 2 (index 1) = headers
+      parsedHeaders = rawJson[1].map(h => String(h).trim());
+
+      // Fila 3+ = datos
+      parsedRows = rawJson.slice(2).filter(row => {
+        // Filtrar filas vacÃ­as (que no tengan NÂº FCL)
+        const fclIdx = parsedHeaders.indexOf('NÂº FCL');
+        return fclIdx >= 0 && row[fclIdx] !== '' && row[fclIdx] !== undefined && row[fclIdx] !== null;
+      });
+
+      // Formatear fechas en las columnas de fecha
+      const dateColumns = ['ETD', 'ETA', 'FECHA CARGUE ', 'FECHA CARGUE'];
+      const dateIdxs = dateColumns.map(c => parsedHeaders.indexOf(c)).filter(i => i >= 0);
+
+      parsedRows = parsedRows.map(row => {
+        return row.map((cell, idx) => {
+          if (dateIdxs.includes(idx) && cell) {
+            // Intentar parsear fecha
+            const d = new Date(cell);
+            if (!isNaN(d.getTime())) {
+              return d.toISOString().split('T')[0];
+            }
+          }
+          return cell !== undefined && cell !== null ? cell : '';
+        });
+      });
+
+      showPreview();
+      showStatus('', '');
+
+    } catch (err) {
+      showStatus('Error al leer el archivo: ' + err.message, 'error');
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function showPreview() {
+  const card = document.getElementById('previewCard');
+  card.classList.add('show');
+  document.getElementById('btnSend').classList.add('show');
+
+  // Stats
+  document.getElementById('pvTotal').textContent = parsedRows.length;
+
+  const wIdx = parsedHeaders.indexOf('W');
+  const dIdx = parsedHeaders.indexOf('DESTINO');
+  const semanas = wIdx >= 0 ? new Set(parsedRows.map(r => r[wIdx]).filter(Boolean)).size : 0;
+  const destinos = dIdx >= 0 ? new Set(parsedRows.map(r => r[dIdx]).filter(Boolean)).size : 0;
+  document.getElementById('pvSemanas').textContent = semanas;
+  document.getElementById('pvDestinos').textContent = destinos;
+
+  // Table preview (first 10 rows, key columns)
+  const keyCols = ['NÂº FCL', 'W', 'SHIPPER', 'DESTINO', 'NAVIERA', 'ETD', 'CONSIGNEE'];
+  const keyIdxs = keyCols.map(c => parsedHeaders.indexOf(c)).filter(i => i >= 0);
+  const keyHeaders = keyIdxs.map(i => parsedHeaders[i]);
+
+  let html = '<table><thead><tr>';
+  keyHeaders.forEach(h => html += `<th>${h}</th>`);
+  html += '</tr></thead><tbody>';
+  parsedRows.slice(0, 10).forEach(row => {
+    html += '<tr>';
+    keyIdxs.forEach(i => html += `<td>${row[i] || ''}</td>`);
+    html += '</tr>';
+  });
+  if (parsedRows.length > 10) {
+    html += `<tr><td colspan="${keyHeaders.length}" style="text-align:center;color:#64748b">... y ${parsedRows.length - 10} registros mÃ¡s</td></tr>`;
+  }
+  html += '</tbody></table>';
+  document.getElementById('previewTable').innerHTML = html;
+}
+
+async function sendData() {
+  const url = document.getElementById('scriptUrl').value.trim();
+  const pw = document.getElementById('password').value;
+
+  if (!url) {
+    showStatus('Configura la URL del Apps Script primero', 'error');
+    return;
+  }
+  if (!parsedRows.length) {
+    showStatus('No hay datos para enviar', 'error');
+    return;
+  }
+
+  const btn = document.getElementById('btnSend');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Enviando datos...';
+  showStatus('Enviando datos a Google Sheets...', 'loading');
+
+  try {
+    const payload = {
+      password: pw,
+      headers: parsedHeaders,
+      rows: parsedRows
+    };
+
+    const response = await fetch(url, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify(payload)
+    });
+
+    // Con no-cors no podemos leer la respuesta, pero si no hay error, asumimos Ã©xito
+    // Para verificar, hacemos un GET
+    setTimeout(async () => {
+      try {
+        const check = await fetch(url + '?action=meta', { method: 'GET' });
+        const meta = await check.json();
+        if (meta.success) {
+          showStatus(`â Dashboard actualizado exitosamente â ${meta.totalRows} registros â ${new Date(meta.lastUpdate).toLocaleString('es-PE')}`, 'success');
+        } else {
+          showStatus('â ï¸ Datos enviados. Verifica en Google Sheets que se actualizÃ³ correctamente.', 'success');
+        }
+      } catch {
+        showStatus('â ï¸ Datos enviados. Verifica en Google Sheets que se actualizÃ³ correctamente.', 'success');
+      }
+      btn.disabled = false;
+      btn.innerHTML = 'ð Actualizar Dashboard en Tiempo Real';
+    }, 3000);
+
+  } catch (err) {
+    showStatus('Error al enviar: ' + err.message, 'error');
+    btn.disabled = false;
+    btn.innerHTML = 'ð Actualizar Dashboard en Tiempo Real';
+  }
+}
+
+function showStatus(msg, type) {
+  const el = document.getElementById('statusMsg');
+  if (!msg) { el.classList.remove('show'); return; }
+  el.textContent = msg;
+  el.className = 'status show ' + type;
+}
+
+// Init
+loadConfig();
+</script>
+</body>
+</html>
