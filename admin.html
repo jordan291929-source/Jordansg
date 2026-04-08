@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin â Programa Despachos Palta</title>
+<title>Admin – Programa Despachos Palta</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
@@ -73,7 +73,7 @@
 <body>
 
 <header>
-  <h1>ð Panel Admin â Despachos Palta MarÃ­timo</h1>
+  <h1>🔐 Panel Admin – Despachos Palta Marítimo</h1>
   <p>Sube tu programa Excel y actualiza el dashboard en tiempo real</p>
 </header>
 
@@ -81,34 +81,34 @@
 
   <!-- Config -->
   <div class="config-card">
-    <h2>âï¸ ConfiguraciÃ³n</h2>
+    <h2>⚙️ Configuración</h2>
     <div class="field">
       <label>URL del Apps Script (Web App)</label>
       <input type="text" id="scriptUrl" placeholder="https://script.google.com/macros/s/XXXXX/exec">
       <div class="hint">Pegar la URL que obtuviste al desplegar el Apps Script como Web App</div>
     </div>
     <div class="field">
-      <label>ContraseÃ±a de Admin</label>
-      <input type="password" id="password" placeholder="Tu contraseÃ±a configurada en el script" value="fruglobe2026">
+      <label>Contraseña de Admin</label>
+      <input type="password" id="password" placeholder="Tu contraseña configurada en el script" value="fruglobe2026">
     </div>
-    <button class="btn-save" onclick="saveConfig()">ð¾ Guardar configuraciÃ³n</button>
-    <span class="saved-indicator" id="savedMsg">â Guardado</span>
+    <button class="btn-save" onclick="saveConfig()">💾 Guardar configuración</button>
+    <span class="saved-indicator" id="savedMsg">✓ Guardado</span>
   </div>
 
   <!-- Upload -->
   <div class="upload-card">
-    <h2>ð¤ Subir Programa Excel</h2>
+    <h2>📤 Subir Programa Excel</h2>
     <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
-      <div class="icon">ð</div>
-      <p>Arrastra tu archivo Excel aquÃ­ o haz clic para seleccionar</p>
-      <div class="small">Programa despachos PALTA MARÃTIMO 2026 - Semana XX.xlsx</div>
+      <div class="icon">📂</div>
+      <p>Arrastra tu archivo Excel aquí o haz clic para seleccionar</p>
+      <div class="small">Programa despachos PALTA MARÍTIMO 2026 - Semana XX.xlsx</div>
     </div>
     <input type="file" id="fileInput" accept=".xlsx,.xls" onchange="handleFile(event)">
   </div>
 
   <!-- Preview -->
   <div class="preview-card" id="previewCard">
-    <h2>ð Vista Previa de Datos</h2>
+    <h2>📊 Vista Previa de Datos</h2>
     <div class="stats">
       <div class="stat"><div class="val" id="pvTotal">0</div><div class="lbl">Total FCL</div></div>
       <div class="stat"><div class="val" id="pvSemanas">0</div><div class="lbl">Semanas</div></div>
@@ -120,7 +120,7 @@
 
   <!-- Send -->
   <button class="btn-send" id="btnSend" onclick="sendData()">
-    ð Actualizar Dashboard en Tiempo Real
+    🚀 Actualizar Dashboard en Tiempo Real
   </button>
 
   <!-- Status -->
@@ -128,7 +128,7 @@
 
 </div>
 
-<div class="footer">FRUGLOBE / AVOGLOBE â Sistema de Despachos MarÃ­timos 2026</div>
+<div class="footer">FRUGLOBE / AVOGLOBE — Sistema de Despachos Marítimos 2026</div>
 
 <script>
 // State
@@ -173,7 +173,7 @@ function processFile(file) {
     return;
   }
 
-  document.getElementById('fileName').textContent = 'ð ' + file.name;
+  document.getElementById('fileName').textContent = '📄 ' + file.name;
 
   const reader = new FileReader();
   reader.onload = function(e) {
@@ -181,7 +181,7 @@ function processFile(file) {
       const data = new Uint8Array(e.target.result);
       const workbook = XLSX.read(data, { type: 'array', cellDates: true });
 
-      // Leer hoja PD MarÃ­timo
+      // Leer hoja PD Marítimo
       const sheetName = workbook.SheetNames.find(n => n.includes('PD Mar')) || workbook.SheetNames[0];
       const sheet = workbook.Sheets[sheetName];
 
@@ -198,8 +198,8 @@ function processFile(file) {
 
       // Fila 3+ = datos
       parsedRows = rawJson.slice(2).filter(row => {
-        // Filtrar filas vacÃ­as (que no tengan NÂº FCL)
-        const fclIdx = parsedHeaders.indexOf('NÂº FCL');
+        // Filtrar filas vacías (que no tengan Nº FCL)
+        const fclIdx = parsedHeaders.indexOf('Nº FCL');
         return fclIdx >= 0 && row[fclIdx] !== '' && row[fclIdx] !== undefined && row[fclIdx] !== null;
       });
 
@@ -246,7 +246,7 @@ function showPreview() {
   document.getElementById('pvDestinos').textContent = destinos;
 
   // Table preview (first 10 rows, key columns)
-  const keyCols = ['NÂº FCL', 'W', 'SHIPPER', 'DESTINO', 'NAVIERA', 'ETD', 'CONSIGNEE'];
+  const keyCols = ['Nº FCL', 'W', 'SHIPPER', 'DESTINO', 'NAVIERA', 'ETD', 'CONSIGNEE'];
   const keyIdxs = keyCols.map(c => parsedHeaders.indexOf(c)).filter(i => i >= 0);
   const keyHeaders = keyIdxs.map(i => parsedHeaders[i]);
 
@@ -259,7 +259,7 @@ function showPreview() {
     html += '</tr>';
   });
   if (parsedRows.length > 10) {
-    html += `<tr><td colspan="${keyHeaders.length}" style="text-align:center;color:#64748b">... y ${parsedRows.length - 10} registros mÃ¡s</td></tr>`;
+    html += `<tr><td colspan="${keyHeaders.length}" style="text-align:center;color:#64748b">... y ${parsedRows.length - 10} registros más</td></tr>`;
   }
   html += '</tbody></table>';
   document.getElementById('previewTable').innerHTML = html;
@@ -297,28 +297,28 @@ async function sendData() {
       body: JSON.stringify(payload)
     });
 
-    // Con no-cors no podemos leer la respuesta, pero si no hay error, asumimos Ã©xito
+    // Con no-cors no podemos leer la respuesta, pero si no hay error, asumimos éxito
     // Para verificar, hacemos un GET
     setTimeout(async () => {
       try {
         const check = await fetch(url + '?action=meta', { method: 'GET' });
         const meta = await check.json();
         if (meta.success) {
-          showStatus(`â Dashboard actualizado exitosamente â ${meta.totalRows} registros â ${new Date(meta.lastUpdate).toLocaleString('es-PE')}`, 'success');
+          showStatus(`✅ Dashboard actualizado exitosamente — ${meta.totalRows} registros — ${new Date(meta.lastUpdate).toLocaleString('es-PE')}`, 'success');
         } else {
-          showStatus('â ï¸ Datos enviados. Verifica en Google Sheets que se actualizÃ³ correctamente.', 'success');
+          showStatus('⚠️ Datos enviados. Verifica en Google Sheets que se actualizó correctamente.', 'success');
         }
       } catch {
-        showStatus('â ï¸ Datos enviados. Verifica en Google Sheets que se actualizÃ³ correctamente.', 'success');
+        showStatus('⚠️ Datos enviados. Verifica en Google Sheets que se actualizó correctamente.', 'success');
       }
       btn.disabled = false;
-      btn.innerHTML = 'ð Actualizar Dashboard en Tiempo Real';
+      btn.innerHTML = '🚀 Actualizar Dashboard en Tiempo Real';
     }, 3000);
 
   } catch (err) {
     showStatus('Error al enviar: ' + err.message, 'error');
     btn.disabled = false;
-    btn.innerHTML = 'ð Actualizar Dashboard en Tiempo Real';
+    btn.innerHTML = '🚀 Actualizar Dashboard en Tiempo Real';
   }
 }
 
