@@ -67,7 +67,7 @@
 
   /* Charts grid */
   .charts-top{display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:16px}
-  .charts-mid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px}
+  .charts-mid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:16px;margin-bottom:16px}
   .charts-bot{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px}
   .card{background:#fff;border-radius:12px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
   .card h3{font-size:.88rem;font-weight:700;color:#374151;margin-bottom:14px;display:flex;align-items:center;gap:6px}
@@ -218,6 +218,10 @@
       <div class="card">
         <h3><span class="dot" style="background:#db2777"></span> Tipo de Packing</h3>
         <div class="chart-wrap"><canvas id="chartPack"></canvas></div>
+      </div>
+      <div class="card">
+        <h3><span class="dot" style="background:#16a34a"></span> Distribución OPL</h3>
+        <div class="chart-wrap"><canvas id="chartOpl"></canvas></div>
       </div>
     </div>
 
@@ -690,6 +694,27 @@ function renderCharts() {
     options: {
       responsive: true, maintainAspectRatio: false,
       plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } }
+    }
+  });
+
+  // 5b. OPL doughnut
+  destroyChart('chartOpl');
+  const oplMap = {};
+  filteredData.forEach(r => {
+    const val = (r.opl || '').trim();
+    if (val && val !== '-' && val !== '–') oplMap[val] = (oplMap[val] || 0) + 1;
+  });
+  const oplEntries = Object.entries(oplMap).sort((a, b) => b[1] - a[1]);
+  const oplTotal = oplEntries.reduce((s, e) => s + e[1], 0);
+  charts['chartOpl'] = new Chart(document.getElementById('chartOpl'), {
+    type: 'doughnut',
+    data: { labels: oplEntries.map(o => o[0]), datasets: [{ data: oplEntries.map(o => o[1]), backgroundColor: ['#16a34a', '#2563eb', '#d97706', '#7c3aed', '#dc2626', '#0891b2', '#db2777', '#ea580c'], borderWidth: 2 }] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } },
+        tooltip: { callbacks: { label: function (ctx) { return ` ${ctx.label}: ${ctx.raw} FCL (${Math.round(ctx.raw / oplTotal * 100)}%)`; } } }
+      }
     }
   });
 
