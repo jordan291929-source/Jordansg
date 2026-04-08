@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dashboard â Programa Despachos Palta MarÃ­timo 2026</title>
+<title>Dashboard – Programa Despachos Palta Marítimo 2026</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
@@ -113,9 +113,9 @@
 </div>
 
 <header>
-  <div class="icon">ð¥</div>
+  <div class="icon">🥑</div>
   <div>
-    <h1>Programa de Despachos â Palta MarÃ­timo 2026</h1>
+    <h1>Programa de Despachos – Palta Marítimo 2026</h1>
     <p id="headerSub">Cargando datos...</p>
   </div>
   <div class="header-right">
@@ -131,7 +131,7 @@
 
     <!-- Filters -->
     <div class="filters">
-      <label>ð Buscar
+      <label>🔍 Buscar
         <input type="text" id="fSearch" placeholder="Nave, consignee, contenedor..." oninput="applyFilters()">
       </label>
       <label>Mes
@@ -158,8 +158,8 @@
       <label>Packing
         <select id="fPack" onchange="applyFilters()"></select>
       </label>
-      <button class="btn-reset" onclick="resetFilters()">â Limpiar</button>
-      <button class="btn-export" onclick="exportCSV()">ð¥ Exportar CSV</button>
+      <button class="btn-reset" onclick="resetFilters()">✕ Limpiar</button>
+      <button class="btn-export" onclick="exportCSV()">📥 Exportar CSV</button>
     </div>
 
     <!-- KPIs -->
@@ -168,19 +168,19 @@
       <div class="kpi green"><label id="kSemLabel">Semana Actual</label><div class="val" id="kSem">0</div><div class="sub">FCL semana actual</div></div>
       <div class="kpi amber"><label>Destino #1</label><div class="val" style="font-size:1.3rem" id="kDestTop">-</div><div class="sub" id="kDestTopN">-</div></div>
       <div class="kpi purple"><label>Naviera #1</label><div class="val" style="font-size:1.2rem" id="kNavTop">-</div><div class="sub" id="kNavTopN">-</div></div>
-      <div class="kpi red"><label>TT Promedio</label><div class="val" id="kTT">-</div><div class="sub">DÃ­as en trÃ¡nsito</div></div>
+      <div class="kpi red"><label>TT Promedio</label><div class="val" id="kTT">-</div><div class="sub">Días en tránsito</div></div>
       <div class="kpi teal"><label>POL Principal</label><div class="val" style="font-size:1.3rem" id="kPol">-</div><div class="sub" id="kPolN">-</div></div>
-      <div class="kpi" style="border-left-color:#16E974"><label>FRUGLOBE / AVOGLOBE</label><div class="val" style="font-size:1.3rem" id="kShip">-</div><div class="sub">DistribuciÃ³n shippers</div></div>
+      <div class="kpi" style="border-left-color:#16E974"><label>FRUGLOBE / AVOGLOBE</label><div class="val" style="font-size:1.3rem" id="kShip">-</div><div class="sub">Distribución shippers</div></div>
     </div>
 
     <!-- Charts top -->
     <div class="charts-top">
       <div class="card">
-        <h3><span class="dot"></span> FCL por Semana â EvoluciÃ³n Acumulada</h3>
+        <h3><span class="dot"></span> FCL por Semana – Evolución Acumulada</h3>
         <div class="chart-wrap-tall"><canvas id="chartSem"></canvas></div>
       </div>
       <div class="card">
-        <h3><span class="dot" style="background:#16E974"></span> DistribuciÃ³n por Destino</h3>
+        <h3><span class="dot" style="background:#16E974"></span> Distribución por Destino</h3>
         <div class="chart-wrap-tall"><canvas id="chartDest"></canvas></div>
       </div>
     </div>
@@ -200,7 +200,7 @@
         <div class="chart-wrap"><canvas id="chartPack"></canvas></div>
       </div>
       <div class="card">
-        <h3><span class="dot" style="background:#00D084"></span> DistribuciÃ³n OPL</h3>
+        <h3><span class="dot" style="background:#00D084"></span> Distribución OPL</h3>
         <div class="chart-wrap"><canvas id="chartOpl"></canvas></div>
       </div>
     </div>
@@ -219,13 +219,13 @@
 
     <!-- Table -->
     <div class="table-card">
-      <h3>ð Detalle de Embarques</h3>
+      <h3>📋 Detalle de Embarques</h3>
       <div class="table-meta" id="tableMeta"></div>
       <div class="table-wrap">
         <table>
           <thead>
             <tr>
-              <th onclick="sortTable('fcl')">NÂ° FCL</th>
+              <th onclick="sortTable('fcl')">N° FCL</th>
               <th onclick="sortTable('semana')">Semana</th>
               <th onclick="sortTable('mes')">Mes</th>
               <th onclick="sortTable('shipper')">Shipper</th>
@@ -252,7 +252,7 @@
 
   <!-- No data state -->
   <div class="no-data" id="noData" style="display:none">
-    <div class="icon">ð</div>
+    <div class="icon">📊</div>
     <h2>Sin datos disponibles</h2>
     <p>No se encontraron datos. Sube datos desde el panel Admin.</p>
   </div>
@@ -290,7 +290,7 @@ async function connectApi() {
       document.getElementById('noData').style.display = 'none';
 
       const lastUpdate = result.lastUpdate ? new Date(result.lastUpdate).toLocaleString('es-PE') : 'N/A';
-      document.getElementById('headerSub').textContent = `${currentWeek} Â· FRUGLOBE & AVOGLOBE Â· Ãltima actualizaciÃ³n: ${lastUpdate}`;
+      document.getElementById('headerSub').textContent = `${currentWeek} · FRUGLOBE & AVOGLOBE · Última actualización: ${lastUpdate}`;
 
       populateFilters();
       applyFilters();
@@ -314,7 +314,7 @@ function hideLoading() {
 // ==================== DATA NORMALIZATION ====================
 function normalizeData(raw) {
   return raw.map(r => ({
-    fcl: r['NÂº FCL'] || r['N\u00ba FCL'] || '',
+    fcl: r['Nº FCL'] || r['N\u00ba FCL'] || '',
     mes: (r['MES'] || '').toString().toUpperCase().trim(),
     semana: (r['W'] || '').toString().toUpperCase().trim(),
     shipper: (r['SHIPPER'] || '').toString().toUpperCase().trim(),
@@ -333,7 +333,7 @@ function normalizeData(raw) {
     fecha_cargue: formatDate(r['FECHA CARGUE '] || r['FECHA CARGUE']),
     packing: (r['PACKING'] || '').toString().toUpperCase().trim(),
     opl: r['OPL'] || '',
-    contenedor: r['NÂº CONTENEDOR'] || r['N\u00ba CONTENEDOR'] || '',
+    contenedor: r['Nº CONTENEDOR'] || r['N\u00ba CONTENEDOR'] || '',
     bl: r['#BL'] || '',
     dam: r['#DAM'] || '',
     empresa_trans: r['EMPRESA TRANSPORTE'] || '',
@@ -375,129 +375,8 @@ function startAutoRefresh() {
         allData = normalizeData(result.data);
         currentWeek = detectCurrentWeek(allData);
         const lastUpdate = result.lastUpdate ? new Date(result.lastUpdate).toLocaleString('es-PE') : 'N/A';
-        document.getElementById('headerSub').textContent = `${currein.</p>
-  </div>
-
-</div>
-
-<script>
-// ==================== CONFIGURATION ====================
-const API_URL = 'https://script.google.com/macros/s/AKfycbw7ecZcCoodxrodVpN-f5Xp80JzPJzb-9KewF0tacOftDRCq5unWqnj3YRYuMJrIVzr/exec';
-const COLORS = ['#004A59','#16E974','#d97706','#67A671','#dc2626','#00D084','#db2777','#ea580c','#65a30d','#162735','#0d9488','#be123c'];
-const PAGE_SIZE = 25;
-const REFRESH_INTERVAL = 5 * 60 * 1000; // 5 minutes
-
-// ==================== STATE ====================
-let allData = [];
-let filteredData = [];
-let currentPage = 1;
-let sortKey = '';
-let sortDir = 1;
-let charts = {};
-let refreshTimer = null;
-let currentWeek = '';
-
-// ==================== API CONNECTION (auto-connect) ====================
-async function connectApi() {
-  try {
-    const response = await fetch(API_URL + '?action=data&t=' + Date.now());
-    const result = await response.json();
-
-    if (result.success && result.data) {
-      allData = normalizeData(result.data);
-      currentWeek = detectCurrentWeek(allData);
-
-      document.getElementById('mainContent').style.display = 'block';
-      document.getElementById('noData').style.display = 'none';
-
-      const lastUpdate = result.lastUpdate ? new Date(result.lastUpdate).toLocaleString('es-PE') : 'N/A';
-      document.getElementById('headerSub').textContent = `${currentWeek} Â· FRUGLOBE & AVOGLOBE Â· Ãltima actualizaciÃ³n: ${lastUpdate}`;
-
-      populateFilters();
-      applyFilters();
-      startAutoRefresh();
-    } else {
-      document.getElementById('noData').style.display = 'block';
-    }
-  } catch (err) {
-    console.error('Connection error:', err);
-    document.getElementById('noData').style.display = 'block';
-  }
-
-  hideLoading();
-}
-
-function hideLoading() {
-  document.getElementById('loadingOverlay').classList.add('hidden');
-  setTimeout(() => document.getElementById('loadingOverlay').style.display = 'none', 500);
-}
-
-// ==================== DATA NORMALIZATION ====================
-function normalizeData(raw) {
-  return raw.map(r => ({
-    fcl: r['NÂº FCL'] || r['N\u00ba FCL'] || '',
-    mes: (r['MES'] || '').toString().toUpperCase().trim(),
-    semana: (r['W'] || '').toString().toUpperCase().trim(),
-    shipper: (r['SHIPPER'] || '').toString().toUpperCase().trim(),
-    destino: (r['DESTINO'] || '').toString().toUpperCase().trim(),
-    naviera: (r['NAVIERA'] || '').toString().toUpperCase().trim(),
-    booking: r['BOOKING'] || '',
-    nave: r['NAVE'] || '',
-    pol: (r['POL'] || '').toString().toUpperCase().trim(),
-    pod: (r['POD'] || '').toString().toUpperCase().trim(),
-    etd: formatDate(r['ETD']),
-    eta: formatDate(r['ETA']),
-    tt: r['TT'] || '',
-    consignee: r['CONSIGNEE'] || '',
-    cnee: r['CNEE'] || '',
-    ov: r['ORDEN DE VENTA'] || '',
-    fecha_cargue: formatDate(r['FECHA CARGUE '] || r['FECHA CARGUE']),
-    packing: (r['PACKING'] || '').toString().toUpperCase().trim(),
-    opl: r['OPL'] || '',
-    contenedor: r['NÂº CONTENEDOR'] || r['N\u00ba CONTENEDOR'] || '',
-    bl: r['#BL'] || '',
-    dam: r['#DAM'] || '',
-    empresa_trans: r['EMPRESA TRANSPORTE'] || '',
-    pago_flete: r['PAGO FLETE'] || ''
-  })).filter(r => r.fcl !== '' && r.fcl !== 0);
-}
-
-function formatDate(val) {
-  if (!val) return '';
-  if (typeof val === 'string') {
-    if (val.includes('T')) return val.split('T')[0];
-    if (val.match(/^\d{4}-\d{2}-\d{2}/)) return val.substring(0, 10);
-    const d = new Date(val);
-    if (!isNaN(d.getTime())) return d.toISOString().split('T')[0];
-    return val;
-  }
-  if (val instanceof Date) return val.toISOString().split('T')[0];
-  return String(val);
-}
-
-function detectCurrentWeek(data) {
-  const weeks = [...new Set(data.map(r => r.semana).filter(Boolean))];
-  weeks.sort((a, b) => {
-    const na = parseInt(a.replace(/\D/g, ''));
-    const nb = parseInt(b.replace(/\D/g, ''));
-    return nb - na;
-  });
-  return weeks[0] || 'Semana actual';
-}
-
-// ==================== AUTO REFRESH ====================
-function startAutoRefresh() {
-  if (refreshTimer) clearInterval(refreshTimer);
-  refreshTimer = setInterval(async () => {
-    try {
-      const response = await fetch(API_URL + '?action=data&t=' + Date.now());
-      const result = await response.json();
-      if (result.success && result.data) {
-        allData = normalizeData(result.data);
-        currentWeek = detectCurrentWeek(allData);
-        const lastUpdate = result.lastUpdate ? new Date(result.lastUpdate).toLocaleString('es-PE') : 'N/A';
-        document.getElementById('headerSub').textContent = `${currentWeek} Â· FRUGLOBE & AVOGLOBE Â· Ãltima actualizaciÃ³n: ${lastUpdate}`;
-        document.getElementById('refreshInfo').textContent = `Actualizado: ${new Date().toLocaleTimeString('es-PE')} Â· Auto-refresh cada 5 min`;
+        document.getElementById('headerSub').textContent = `${currentWeek} · FRUGLOBE & AVOGLOBE · Última actualización: ${lastUpdate}`;
+        document.getElementById('refreshInfo').textContent = `Actualizado: ${new Date().toLocaleTimeString('es-PE')} · Auto-refresh cada 5 min`;
         populateFilters();
         applyFilters();
       }
@@ -614,7 +493,7 @@ function updateKPIs() {
 function renderTable() {
   const start = (currentPage - 1) * PAGE_SIZE;
   const page = filteredData.slice(start, start + PAGE_SIZE);
-  document.getElementById('tableMeta').textContent = `Mostrando ${Math.min(start + 1, filteredData.length)}â${Math.min(start + PAGE_SIZE, filteredData.length)} de ${filteredData.length} embarques`;
+  document.getElementById('tableMeta').textContent = `Mostrando ${Math.min(start + 1, filteredData.length)}–${Math.min(start + PAGE_SIZE, filteredData.length)} de ${filteredData.length} embarques`;
 
   const tbody = document.getElementById('tableBody');
   tbody.innerHTML = '';
@@ -642,13 +521,13 @@ function renderTable() {
   // Pagination
   const totalPages = Math.ceil(filteredData.length / PAGE_SIZE);
   const pg = document.getElementById('pagination');
-  pg.innerHTML = `<span class="info">PÃ¡gina ${currentPage} de ${totalPages}</span>`;
-  if (currentPage > 1) pg.innerHTML += `<button onclick="goPage(${currentPage - 1})">â¹ Ant</button>`;
+  pg.innerHTML = `<span class="info">Página ${currentPage} de ${totalPages}</span>`;
+  if (currentPage > 1) pg.innerHTML += `<button onclick="goPage(${currentPage - 1})">‹ Ant</button>`;
   const s2 = Math.max(1, currentPage - 2), e2 = Math.min(totalPages, currentPage + 2);
   for (let i = s2; i <= e2; i++) {
     pg.innerHTML += `<button class="${i === currentPage ? 'active' : ''}" onclick="goPage(${i})">${i}</button>`;
   }
-  if (currentPage < totalPages) pg.innerHTML += `<button onclick="goPage(${currentPage + 1})">Sig âº</button>`;
+  if (currentPage < totalPages) pg.innerHTML += `<button onclick="goPage(${currentPage + 1})">Sig ›</button>`;
 }
 
 function goPage(n) { currentPage = n; renderTable(); window.scrollTo(0, document.querySelector('.table-card').offsetTop - 20); }
@@ -677,7 +556,7 @@ function destroyChart(id) { if (charts[id]) { charts[id].destroy(); charts[id] =
 function renderCharts() {
   const aggBy = (key) => {
     const m = {};
-    filteredData.forEach(r => { const k = r[key] || 'â'; m[k] = (m[k] || 0) + 1; });
+    filteredData.forEach(r => { const k = r[key] || '–'; m[k] = (m[k] || 0) + 1; });
     return Object.entries(m).sort((a, b) => b[1] - a[1]);
   };
 
@@ -712,7 +591,7 @@ function renderCharts() {
 
   // 2. Destino doughnut
   destroyChart('chartDest');
-  const destData = aggBy('destino').filter(d => d[0] !== 'â').slice(0, 10);
+  const destData = aggBy('destino').filter(d => d[0] !== '–').slice(0, 10);
   charts['chartDest'] = new Chart(document.getElementById('chartDest'), {
     type: 'doughnut',
     data: { labels: destData.map(d => d[0]), datasets: [{ data: destData.map(d => d[1]), backgroundColor: COLORS, borderWidth: 2 }] },
@@ -727,7 +606,7 @@ function renderCharts() {
 
   // 3. Naviera bar horizontal
   destroyChart('chartNav');
-  const navData = aggBy('naviera').filter(n => n[0] !== '-' && n[0] !== 'â').slice(0, 8);
+  const navData = aggBy('naviera').filter(n => n[0] !== '-' && n[0] !== '–').slice(0, 8);
   charts['chartNav'] = new Chart(document.getElementById('chartNav'), {
     type: 'bar',
     data: { labels: navData.map(n => n[0]), datasets: [{ label: 'FCL', data: navData.map(n => n[1]), backgroundColor: COLORS.slice(4), borderRadius: 6 }] },
@@ -740,7 +619,7 @@ function renderCharts() {
 
   // 4. POL pie
   destroyChart('chartPol');
-  const polData = aggBy('pol').filter(p => p[0] !== '-' && p[0] !== 'â');
+  const polData = aggBy('pol').filter(p => p[0] !== '-' && p[0] !== '–');
   charts['chartPol'] = new Chart(document.getElementById('chartPol'), {
     type: 'pie',
     data: { labels: polData.map(p => p[0]), datasets: [{ data: polData.map(p => p[1]), backgroundColor: ['#004A59', '#16E974', '#d97706', '#67A671', '#00D084'], borderWidth: 2 }] },
@@ -774,7 +653,7 @@ function renderCharts() {
   const oplMap = {};
   filteredData.forEach(r => {
     const val = (r.opl || '').trim();
-    if (val && val !== '-' && val !== 'â') oplMap[val] = (oplMap[val] || 0) + 1;
+    if (val && val !== '-' && val !== '–') oplMap[val] = (oplMap[val] || 0) + 1;
   });
   const oplEntries = Object.entries(oplMap).sort((a, b) => b[1] - a[1]);
   const oplTotal = oplEntries.reduce((s, e) => s + e[1], 0);
@@ -808,7 +687,7 @@ function renderCharts() {
 
   // 7. Shipper vs destino grouped bar
   destroyChart('chartShipDest');
-  const destRank = aggBy('destino').filter(d => d[0] !== 'â').slice(0, 6).map(d => d[0]);
+  const destRank = aggBy('destino').filter(d => d[0] !== '–').slice(0, 6).map(d => d[0]);
   const shipMap = { 'FRUGLOBE': {}, 'AVOGLOBE': {} };
   filteredData.forEach(r => {
     if (r.shipper && r.destino && destRank.includes(r.destino)) {
