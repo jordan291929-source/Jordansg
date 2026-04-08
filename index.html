@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard â Programa Despachos Palta MarÃ­timo 2026</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Segoe UI',system-ui,sans-serif;background:#f1f5f9;color:#1e293b;min-height:100vh}
+
+  /* Loading overlay */
+  .loading-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:#f1f5f9;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;transition:opacity .5s}
+  .loading-overlay.hidden{opacity:0;pointer-events:none}
+  .loading-spinner{width:60px;height:60px;border:4px solid #e2e8f0;border-top-color:#2563eb;border-radius:50%;animation:spin .8s linear infinite}
+  .loading-text{margin-top:20px;font-size:1rem;color:#64748b;font-weight:600}
+  .loading-sub{margin-top:8px;font-size:.82rem;color:#94a3b8}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  header{background:linear-gradient(135deg,#1e3a5f 0%,#2563eb 100%);color:#fff;padding:20px 32px;display:flex;align-items:center;gap:16px;box-shadow:0 4px 12px rgba(0,0,0,.2)}
+  header .icon{font-size:2.4rem}
+  header h1{font-size:1.5rem;font-weight:700;line-height:1.2}
+  header p{font-size:.85rem;opacity:.8;margin-top:2px}
+  .header-right{margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+  .badge{background:rgba(255,255,255,.2);border-radius:20px;padding:4px 12px;font-size:.75rem;font-weight:600;white-space:nowrap}
+  .live-dot{display:inline-block;width:8px;height:8px;background:#22c55e;border-radius:50%;margin-right:6px;animation:pulse 2s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+  .refresh-info{font-size:.7rem;color:rgba(255,255,255,.5)}
+
+  .container{max-width:1600px;margin:0 auto;padding:24px}
+
+  /* Config bar */
+  .config-bar{background:#1e293b;border-radius:12px;padding:14px 20px;margin-bottom:20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .config-bar label{font-size:.78rem;font-weight:600;color:#94a3b8}
+  .config-bar input{border:1.5px solid #334155;border-radius:8px;padding:7px 12px;font-size:.82rem;color:#e2e8f0;background:#0f172a;flex:1;min-width:280px;outline:none}
+  .config-bar input:focus{border-color:#2563eb}
+  .config-bar button{background:#2563eb;color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:.82rem;font-weight:600;cursor:pointer}
+  .config-bar button:hover{background:#1d4ed8}
+  .config-bar .status-text{font-size:.75rem;margin-left:auto}
+  .config-bar .status-text.ok{color:#22c55e}
+  .config-bar .status-text.err{color:#ef4444}
+  .config-bar .status-text.wait{color:#f59e0b}
+
+  /* Filters */
+  .filters{background:#fff;border-radius:12px;padding:16px 20px;margin-bottom:24px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+  .filters label{font-size:.78rem;font-weight:600;color:#64748b;display:flex;flex-direction:column;gap:4px}
+  .filters select,.filters input{border:1.5px solid #e2e8f0;border-radius:8px;padding:7px 10px;font-size:.82rem;color:#1e293b;background:#f8fafc;min-width:130px;outline:none;transition:border .2s}
+  .filters select:focus,.filters input:focus{border-color:#2563eb}
+  .filters input{min-width:180px}
+  .btn-reset{margin-left:auto;background:#ef4444;color:#fff;border:none;border-radius:8px;padding:8px 18px;font-size:.82rem;font-weight:600;cursor:pointer;transition:background .2s}
+  .btn-reset:hover{background:#dc2626}
+  .btn-export{background:#16a34a;color:#fff;border:none;border-radius:8px;padding:8px 18px;font-size:.82rem;font-weight:600;cursor:pointer;transition:background .2s;margin-left:8px}
+  .btn-export:hover{background:#15803d}
+
+  /* KPIs */
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin-bottom:24px}
+  .kpi{background:#fff;border-radius:12px;padding:18px 20px;box-shadow:0 1px 4px rgba(0,0,0,.08);border-left:4px solid #2563eb;position:relative;overflow:hidden}
+  .kpi.green{border-left-color:#16a34a}
+  .kpi.amber{border-left-color:#d97706}
+  .kpi.purple{border-left-color:#7c3aed}
+  .kpi.red{border-left-color:#dc2626}
+  .kpi.teal{border-left-color:#0891b2}
+  .kpi label{font-size:.72rem;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.05em}
+  .kpi .val{font-size:2rem;font-weight:800;color:#1e293b;line-height:1.1;margin-top:4px}
+  .kpi .sub{font-size:.75rem;color:#94a3b8;margin-top:2px}
+  .kpi::after{content:'';position:absolute;right:-10px;top:-10px;width:60px;height:60px;border-radius:50%;opacity:.06;background:#2563eb}
+
+  /* Charts grid */
+  .charts-top{display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:16px}
+  .charts-mid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px}
+  .charts-bot{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px}
+  .card{background:#fff;border-radius:12px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+  .card h3{font-size:.88rem;font-weight:700;color:#374151;margin-bottom:14px;display:flex;align-items:center;gap:6px}
+  .card h3 .dot{width:10px;height:10px;border-radius:50%;background:#2563eb;flex-shrink:0}
+  .chart-wrap{position:relative;width:100%;height:240px}
+  .chart-wrap-tall{position:relative;width:100%;height:320px}
+
+  /* Table */
+  .table-card{background:#fff;border-radius:12px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+  .table-card h3{font-size:.88rem;font-weight:700;color:#374151;margin-bottom:4px}
+  .table-meta{font-size:.78rem;color:#94a3b8;margin-bottom:14px}
+  .table-wrap{overflow-x:auto}
+  table{width:100%;border-collapse:collapse;font-size:.79rem}
+  thead th{background:#f8fafc;border-bottom:2px solid #e2e8f0;padding:9px 10px;text-align:left;font-weight:700;color:#374151;white-space:nowrap;cursor:pointer;user-select:none;position:sticky;top:0}
+  thead th:hover{background:#f1f5f9;color:#2563eb}
+  thead th.sorted-asc::after{content:' \u25b2'}
+  thead th.sorted-desc::after{content:' \u25bc'}
+  tbody tr{border-bottom:1px solid #f1f5f9;transition:background .15s}
+  tbody tr:hover{background:#f0f9ff}
+  tbody td{padding:8px 10px;color:#475569;white-space:nowrap}
+  tbody td.bold{font-weight:600;color:#1e293b}
+  .badge-dest{display:inline-block;padding:2px 8px;border-radius:12px;font-size:.72rem;font-weight:600;background:#dbeafe;color:#1d4ed8}
+  .badge-nav{display:inline-block;padding:2px 8px;border-radius:12px;font-size:.72rem;font-weight:600;background:#f3e8ff;color:#6d28d9}
+  .badge-sem{display:inline-block;padding:2px 8px;border-radius:12px;font-size:.72rem;font-weight:600;background:#dcfce7;color:#15803d}
+  .badge-pol{display:inline-block;padding:2px 8px;border-radius:12px;font-size:.72rem;font-weight:600;background:#fef3c7;color:#92400e}
+  .badge-pack{display:inline-block;padding:2px 8px;border-radius:12px;font-size:.72rem;font-weight:600;background:#fce7f3;color:#9d174d}
+
+  /* Pagination */
+  .pagination{display:flex;align-items:center;gap:8px;margin-top:14px;justify-content:flex-end;flex-wrap:wrap}
+  .pagination button{border:1.5px solid #e2e8f0;background:#fff;color:#374151;border-radius:8px;padding:6px 12px;font-size:.8rem;cursor:pointer;transition:all .2s}
+  .pagination button:hover{background:#2563eb;color:#fff;border-color:#2563eb}
+  .pagination button.active{background:#2563eb;color:#fff;border-color:#2563eb;font-weight:700}
+  .pagination .info{font-size:.78rem;color:#94a3b8;margin-right:auto}
+
+  /* No-data state */
+  .no-data{text-align:center;padding:60px 20px;color:#94a3b8}
+  .no-data .icon{font-size:4rem;margin-bottom:16px}
+  .no-data h2{font-size:1.2rem;color:#64748b;margin-bottom:8px}
+  .no-data p{font-size:.88rem}
+
+  @media(max-width:900px){
+    .charts-top,.charts-mid,.charts-bot{grid-template-columns:1fr}
+    .config-bar{flex-direction:column;align-items:stretch}
+    .config-bar input{min-width:auto}
+  }
+</style>
+</head>
+<body>
+
+<!-- Loading -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-spinner"></div>
+  <div class="loading-text">Cargando Dashboard...</div>
+  <div class="loading-sub">Conectando con Google Sheets</div>
+</div>
+
+<header>
+  <div class="icon">ð¥</div>
+  <div>
+    <h1>Programa de Despachos â Palta MarÃ­timo 2026</h1>
+    <p id="headerSub">Cargando datos...</p>
+  </div>
+  <div class="header-right">
+    <div class="badge"><span class="live-dot"></span> EN VIVO</div>
+    <div class="refresh-info" id="refreshInfo">Auto-refresh cada 5 min</div>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- Config bar (first time) -->
+  <div class="config-bar" id="configBar">
+    <label>ð URL Apps Script:</label>
+    <input type="text" id="apiUrl" placeholder="https://script.google.com/macros/s/XXXXX/exec">
+    <button onclick="connectApi()">Conectar</button>
+    <span class="status-text wait" id="apiStatus">â³ Sin conectar</span>
+  </div>
+
+  <!-- Main content (hidden until data loads) -->
+  <div id="mainContent" style="display:none">
+
+    <!-- Filters -->
+    <div class="filters">
+      <label>ð Buscar
+        <input type="text" id="fSearch" placeholder="Nave, consignee, contenedor..." oninput="applyFilters()">
+      </label>
+      <label>Mes
+        <select id="fMes" onchange="applyFilters()"></select>
+      </label>
+      <label>Semana
+        <select id="fSem" onchange="applyFilters()"></select>
+      </label>
+      <label>Shipper
+        <select id="fShipper" onchange="applyFilters()">
+          <option value="">Todos</option>
+          <option>FRUGLOBE</option><option>AVOGLOBE</option>
+        </select>
+      </label>
+      <label>Destino
+        <select id="fDest" onchange="applyFilters()"></select>
+      </label>
+      <label>Naviera
+        <select id="fNav" onchange="applyFilters()"></select>
+      </label>
+      <label>POL
+        <select id="fPol" onchange="applyFilters()"></select>
+      </label>
+      <label>Packing
+        <select id="fPack" onchange="applyFilters()"></select>
+      </label>
+      <button class="btn-reset" onclick="resetFilters()">â Limpiar</button>
+      <button class="btn-export" onclick="exportCSV()">ð¥ Exportar CSV</button>
+    </div>
+
+    <!-- KPIs -->
+    <div class="kpis" id="kpiRow">
+      <div class="kpi"><label>Total FCL</label><div class="val" id="kFcl">0</div><div class="sub">Embarques registrados</div></div>
+      <div class="kpi green"><label id="kSemLabel">Semana Actual</label><div class="val" id="kSem">0</div><div class="sub">FCL semana actual</div></div>
+      <div class="kpi amber"><label>Destino #1</label><div class="val" style="font-size:1.3rem" id="kDestTop">-</div><div class="sub" id="kDestTopN">-</div></div>
+      <div class="kpi purple"><label>Naviera #1</label><div class="val" style="font-size:1.2rem" id="kNavTop">-</div><div class="sub" id="kNavTopN">-</div></div>
+      <div class="kpi red"><label>TT Promedio</label><div class="val" id="kTT">-</div><div class="sub">DÃ­as en trÃ¡nsito</div></div>
+      <div class="kpi teal"><label>POL Principal</label><div class="val" style="font-size:1.3rem" id="kPol">-</div><div class="sub" id="kPolN">-</div></div>
+      <div class="kpi" style="border-left-color:#db2777"><label>FRUGLOBE / AVOGLOBE</label><div class="val" style="font-size:1.3rem" id="kShip">-</div><div class="sub">DistribuciÃ³n shippers</div></div>
+    </div>
+
+    <!-- Charts top -->
+    <div class="charts-top">
+      <div class="card">
+        <h3><span class="dot"></span> FCL por Semana â EvoluciÃ³n Acumulada</h3>
+        <div class="chart-wrap-tall"><canvas id="chartSem"></canvas></div>
+      </div>
+      <div class="card">
+        <h3><span class="dot" style="background:#16a34a"></span> DistribuciÃ³n por Destino</h3>
+        <div class="chart-wrap-tall"><canvas id="chartDest"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Charts mid -->
+    <div class="charts-mid">
+      <div class="card">
+        <h3><span class="dot" style="background:#7c3aed"></span> FCL por Naviera</h3>
+        <div class="chart-wrap"><canvas id="chartNav"></canvas></div>
+      </div>
+      <div class="card">
+        <h3><span class="dot" style="background:#d97706"></span> Puerto de Origen (POL)</h3>
+        <div class="chart-wrap"><canvas id="chartPol"></canvas></div>
+      </div>
+      <div class="card">
+        <h3><span class="dot" style="background:#db2777"></span> Tipo de Packing</h3>
+        <div class="chart-wrap"><canvas id="chartPack"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Charts bot -->
+    <div class="charts-bot">
+      <div class="card">
+        <h3><span class="dot" style="background:#0891b2"></span> FCL por Mes</h3>
+        <div class="chart-wrap"><canvas id="chartMes"></canvas></div>
+      </div>
+      <div class="card">
+        <h3><span class="dot" style="background:#ea580c"></span> Shipper vs Destino (Top 6)</h3>
+        <div class="chart-wrap"><canvas id="chartShipDest"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="table-card">
+      <h3>ð Detalle de Embarques</h3>
+      <div class="table-meta" id="tableMeta"></div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th onclick="sortTable('fcl')">NÂ° FCL</th>
+              <th onclick="sortTable('semana')">Semana</th>
+              <th onclick="sortTable('mes')">Mes</th>
+              <th onclick="sortTable('shipper')">Shipper</th>
+              <th onclick="sortTable('destino')">Destino</th>
+              <th onclick="sortTable('naviera')">Naviera</th>
+              <th onclick="sortTable('pol')">POL</th>
+              <th onclick="sortTable('pod')">POD</th>
+              <th onclick="sortTable('etd')">ETD</th>
+              <th onclick="sortTable('eta')">ETA</th>
+              <th onclick="sortTable('tt')">TT</th>
+              <th onclick="sortTable('fecha_cargue')">Fecha Cargue</th>
+              <th onclick="sortTable('packing')">Packing</th>
+              <th onclick="sortTable('consignee')">Consignee</th>
+              <th onclick="sortTable('nave')">Nave</th>
+              <th onclick="sortTable('contenedor')">Contenedor</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+      <div class="pagination" id="pagination"></div>
+    </div>
+  </div>
+
+  <!-- No data state -->
+  <div class="no-data" id="noData" style="display:none">
+    <div class="icon">ð</div>
+    <h2>Sin datos disponibles</h2>
+    <p>Conecta la URL del Apps Script y sube datos desde el panel Admin</p>
+  </div>
+
+</div>
+
+<script>
+// ==================== CONFIGURATION ====================
+const COLORS = ['#2563eb','#16a34a','#d97706','#7c3aed','#dc2626','#0891b2','#db2777','#ea580c','#65a30d','#4338ca','#0d9488','#be123c'];
+const PAGE_SIZE = 25;
+const REFRESH_INTERVAL = 5 * 60 * 1000; // 5 minutes
+
+// ==================== STATE ====================
+let allData = [];
+let filteredData = [];
+let currentPage = 1;
+let sortKey = '';
+let sortDir = 1;
+let charts = {};
+let refreshTimer = null;
+let currentWeek = '';
+
+// ==================== API CONNECTION ====================
+function loadApiUrl() {
+  const saved = localStorage.getItem('dashboard_api_url');
+  if (saved) {
+    document.getElementById('apiUrl').value = saved;
+    connectApi(true);
+  } else {
+    hideLoading();
+  }
+}
+
+async function connectApi(silent) {
+  const url = document.getElementById('apiUrl').value.trim();
+  if (!url) {
+    if (!silent) setApiStatus('Ingresa una URL vÃ¡lida', 'err');
+    return;
+  }
+
+  localStorage.setItem('dashboard_api_url', url);
+  setApiStatus('â³ Conectando...', 'wait');
+
+  try {
+    const response = await fetch(url + '?action=data&t=' + Date.now());
+    const result = await response.json();
+
+    if (result.success && result.data) {
+      allData = normalizeData(result.data);
+      currentWeek = detectCurrentWeek(allData);
+
+      setApiStatus(`â Conectado â ${allData.length} registros`, 'ok');
+      document.getElementById('configBar').style.display = 'none';
+      document.getElementById('mainContent').style.display = 'block';
+      document.getElementById('noData').style.display = 'none';
+
+      const lastUpdate = result.lastUpdate ? new Date(result.lastUpdate).toLocaleString('es-PE') : 'N/A';
+      document.getElementById('headerSub').textContent = `${currentWeek} Â· FRUGLOBE & AVOGLOBE Â· Ãltima actualizaciÃ³n: ${lastUpdate}`;
+
+      populateFilters();
+      applyFilters();
+      startAutoRefresh();
+    } else {
+      setApiStatus('â ï¸ ' + (result.error || 'Sin datos'), 'err');
+      document.getElementById('noData').style.display = 'block';
+    }
+  } catch (err) {
+    setApiStatus('â Error: ' + err.message, 'err');
+    if (!silent) document.getElementById('noData').style.display = 'block';
+  }
+
+  hideLoading();
+}
+
+function setApiStatus(text, type) {
+  const el = document.getElementById('apiStatus');
+  el.textContent = text;
+  el.className = 'status-text ' + type;
+}
+
+function hideLoading() {
+  document.getElementById('loadingOverlay').classList.add('hidden');
+  setTimeout(() => document.getElementById('loadingOverlay').style.display = 'none', 500);
+}
+
+// ==================== DATA NORMALIZATION ====================
+function normalizeData(raw) {
+  return raw.map(r => ({
+    fcl: r['NÂº FCL'] || r['N\u00ba FCL'] || '',
+    mes: (r['MES'] || '').toString().toUpperCase().trim(),
+    semana: (r['W'] || '').toString().toUpperCase().trim(),
+    shipper: (r['SHIPPER'] || '').toString().toUpperCase().trim(),
+    destino: (r['DESTINO'] || '').toString().toUpperCase().trim(),
+    naviera: (r['NAVIERA'] || '').toString().toUpperCase().trim(),
+    booking: r['BOOKING'] || '',
+    nave: r['NAVE'] || '',
+    pol: (r['POL'] || '').toString().toUpperCase().trim(),
+    pod: (r['POD'] || '').toString().toUpperCase().trim(),
+    etd: formatDate(r['ETD']),
+    eta: formatDate(r['ETA']),
+    tt: r['TT'] || '',
+    consignee: r['CONSIGNEE'] || '',
+    cnee: r['CNEE'] || '',
+    ov: r['ORDEN DE VENTA'] || '',
+    fecha_cargue: formatDate(r['FECHA CARGUE '] || r['FECHA CARGUE']),
+    packing: (r['PACKING'] || '').toString().toUpperCase().trim(),
+    opl: r['OPL'] || '',
+    contenedor: r['NÂº CONTENEDOR'] || r['N\u00ba CONTENEDOR'] || '',
+    bl: r['#BL'] || '',
+    dam: r['#DAM'] || '',
+    empresa_trans: r['EMPRESA TRANSPORTE'] || '',
+    pago_flete: r['PAGO FLETE'] || ''
+  })).filter(r => r.fcl !== '' && r.fcl !== 0);
+}
+
+function formatDate(val) {
+  if (!val) return '';
+  if (typeof val === 'string') {
+    if (val.includes('T')) return val.split('T')[0];
+    if (val.match(/^\d{4}-\d{2}-\d{2}/)) return val.substring(0, 10);
+    const d = new Date(val);
+    if (!isNaN(d.getTime())) return d.toISOString().split('T')[0];
+    return val;
+  }
+  if (val instanceof Date) return val.toISOString().split('T')[0];
+  return String(val);
+}
+
+function detectCurrentWeek(data) {
+  const weeks = [...new Set(data.map(r => r.semana).filter(Boolean))];
+  weeks.sort((a, b) => {
+    const na = parseInt(a.replace(/\D/g, ''));
+    const nb = parseInt(b.replace(/\D/g, ''));
+    return nb - na;
+  });
+  return weeks[0] || 'Semana actual';
+}
+
+// ==================== AUTO REFRESH ====================
+function startAutoRefresh() {
+  if (refreshTimer) clearInterval(refreshTimer);
+  refreshTimer = setInterval(async () => {
+    try {
+      const url = localStorage.getItem('dashboard_api_url');
+      if (!url) return;
+      const response = await fetch(url + '?action=data&t=' + Date.now());
+      const result = await response.json();
+      if (result.success && result.data) {
+        allData = normalizeData(result.data);
+        currentWeek = detectCurrentWeek(allData);
+        const lastUpdate = result.lastUpdate ? new Date(result.lastUpdate).toLocaleString('es-PE') : 'N/A';
+        document.getElementById('headerSub').textContent = `${currentWeek} Â· FRUGLOBE & AVOGLOBE Â· Ãltima actualizaciÃ³n: ${lastUpdate}`;
+        document.getElementById('refreshInfo').textContent = `Actualizado: ${new Date().toLocaleTimeString('es-PE')} Â· Auto-refresh cada 5 min`;
+        populateFilters();
+        applyFilters();
+      }
+    } catch (e) { console.log('Auto-refresh error:', e); }
+  }, REFRESH_INTERVAL);
+}
+
+// ==================== FILTERS ====================
+function populateFilters() {
+  const makeOpts = (id, values) => {
+    const sel = document.getElementById(id);
+    const current = sel.value;
+    sel.innerHTML = '<option value="">Todos</option>';
+    values.filter(Boolean).sort().forEach(v => {
+      sel.innerHTML += `<option${v === current ? ' selected' : ''}>${v}</option>`;
+    });
+  };
+
+  makeOpts('fMes', [...new Set(allData.map(r => r.mes))]);
+  makeOpts('fSem', [...new Set(allData.map(r => r.semana))].sort((a,b) => {
+    return parseInt(a.replace(/\D/g,'')) - parseInt(b.replace(/\D/g,''));
+  }));
+  makeOpts('fDest', [...new Set(allData.map(r => r.destino))]);
+  makeOpts('fNav', [...new Set(allData.map(r => r.naviera).filter(n => n && n !== '-'))]);
+  makeOpts('fPol', [...new Set(allData.map(r => r.pol).filter(p => p && p !== '-'))]);
+  makeOpts('fPack', [...new Set(allData.map(r => r.packing))]);
+}
+
+function applyFilters() {
+  const mes = document.getElementById('fMes').value;
+  const sem = document.getElementById('fSem').value;
+  const ship = document.getElementById('fShipper').value;
+  const dest = document.getElementById('fDest').value;
+  const nav = document.getElementById('fNav').value;
+  const pol = document.getElementById('fPol').value;
+  const pack = document.getElementById('fPack').value;
+  const search = document.getElementById('fSearch').value.toLowerCase().trim();
+
+  filteredData = allData.filter(r => {
+    if (mes && r.mes !== mes) return false;
+    if (sem && r.semana !== sem) return false;
+    if (ship && r.shipper !== ship) return false;
+    if (dest && r.destino !== dest) return false;
+    if (nav && r.naviera !== nav) return false;
+    if (pol && r.pol !== pol) return false;
+    if (pack && !r.packing.includes(pack)) return false;
+    if (search) {
+      const hay = [r.nave, r.consignee, r.contenedor, r.bl, r.dam, r.ov, r.empresa_trans, r.booking].join(' ').toLowerCase();
+      if (!hay.includes(search)) return false;
+    }
+    return true;
+  });
+
+  currentPage = 1;
+  updateKPIs();
+  renderTable();
+  renderCharts();
+}
+
+function resetFilters() {
+  ['fMes','fSem','fShipper','fDest','fNav','fPol','fPack'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('fSearch').value = '';
+  applyFilters();
+}
+
+// ==================== KPIs ====================
+function updateKPIs() {
+  const n = filteredData.length;
+  document.getElementById('kFcl').textContent = n;
+
+  // Semana actual
+  document.getElementById('kSemLabel').textContent = currentWeek;
+  const semActual = filteredData.filter(r => r.semana === currentWeek).length;
+  document.getElementById('kSem').textContent = semActual;
+
+  // Top destino
+  const destCount = {};
+  filteredData.forEach(r => { if (r.destino) destCount[r.destino] = (destCount[r.destino] || 0) + 1; });
+  const topDest = Object.entries(destCount).sort((a, b) => b[1] - a[1])[0];
+  if (topDest) {
+    document.getElementById('kDestTop').textContent = topDest[0];
+    document.getElementById('kDestTopN').textContent = topDest[1] + ' FCL (' + Math.round(topDest[1] / n * 100) + '%)';
+  }
+
+  // Top naviera
+  const navCount = {};
+  filteredData.forEach(r => { if (r.naviera && r.naviera !== '-') navCount[r.naviera] = (navCount[r.naviera] || 0) + 1; });
+  const topNav = Object.entries(navCount).sort((a, b) => b[1] - a[1])[0];
+  if (topNav) {
+    document.getElementById('kNavTop').textContent = topNav[0];
+    document.getElementById('kNavTopN').textContent = topNav[1] + ' FCL';
+  }
+
+  // TT promedio
+  const tts = filteredData.map(r => parseFloat(r.tt)).filter(v => !isNaN(v));
+  document.getElementById('kTT').textContent = tts.length ? (tts.reduce((a, b) => a + b, 0) / tts.length).toFixed(1) : '-';
+
+  // POL principal
+  const polCount = {};
+  filteredData.forEach(r => { if (r.pol && r.pol !== '-') polCount[r.pol] = (polCount[r.pol] || 0) + 1; });
+  const topPol = Object.entries(polCount).sort((a, b) => b[1] - a[1])[0];
+  if (topPol) {
+    document.getElementById('kPol').textContent = topPol[0];
+    document.getElementById('kPolN').textContent = topPol[1] + ' FCL (' + Math.round(topPol[1] / n * 100) + '%)';
+  }
+
+  // Shippers
+  const fg = filteredData.filter(r => r.shipper === 'FRUGLOBE').length;
+  const av = filteredData.filter(r => r.shipper === 'AVOGLOBE').length;
+  document.getElementById('kShip').textContent = fg + ' / ' + av;
+}
+
+// ==================== TABLE ====================
+function renderTable() {
+  const start = (currentPage - 1) * PAGE_SIZE;
+  const page = filteredData.slice(start, start + PAGE_SIZE);
+  document.getElementById('tableMeta').textContent = `Mostrando ${Math.min(start + 1, filteredData.length)}â${Math.min(start + PAGE_SIZE, filteredData.length)} de ${filteredData.length} embarques`;
+
+  const tbody = document.getElementById('tableBody');
+  tbody.innerHTML = '';
+  page.forEach(r => {
+    tbody.innerHTML += `<tr>
+      <td class="bold">${r.fcl}</td>
+      <td><span class="badge-sem">${r.semana}</span></td>
+      <td>${r.mes}</td>
+      <td>${r.shipper}</td>
+      <td><span class="badge-dest">${r.destino}</span></td>
+      <td><span class="badge-nav">${r.naviera}</span></td>
+      <td><span class="badge-pol">${r.pol}</span></td>
+      <td>${r.pod}</td>
+      <td>${r.etd}</td>
+      <td>${r.eta}</td>
+      <td>${r.tt !== '' ? r.tt + 'd' : ''}</td>
+      <td>${r.fecha_cargue}</td>
+      <td><span class="badge-pack">${r.packing}</span></td>
+      <td>${r.consignee}</td>
+      <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis">${r.nave}</td>
+      <td style="font-family:monospace;font-size:.75rem">${r.contenedor}</td>
+    </tr>`;
+  });
+
+  // Pagination
+  const totalPages = Math.ceil(filteredData.length / PAGE_SIZE);
+  const pg = document.getElementById('pagination');
+  pg.innerHTML = `<span class="info">PÃ¡gina ${currentPage} de ${totalPages}</span>`;
+  if (currentPage > 1) pg.innerHTML += `<button onclick="goPage(${currentPage - 1})">â¹ Ant</button>`;
+  const s2 = Math.max(1, currentPage - 2), e2 = Math.min(totalPages, currentPage + 2);
+  for (let i = s2; i <= e2; i++) {
+    pg.innerHTML += `<button class="${i === currentPage ? 'active' : ''}" onclick="goPage(${i})">${i}</button>`;
+  }
+  if (currentPage < totalPages) pg.innerHTML += `<button onclick="goPage(${currentPage + 1})">Sig âº</button>`;
+}
+
+function goPage(n) { currentPage = n; renderTable(); window.scrollTo(0, document.querySelector('.table-card').offsetTop - 20); }
+
+// ==================== SORT ====================
+function sortTable(key) {
+  if (sortKey === key) { sortDir *= -1; } else { sortKey = key; sortDir = 1; }
+
+  document.querySelectorAll('thead th').forEach(th => th.classList.remove('sorted-asc', 'sorted-desc'));
+
+  filteredData.sort((a, b) => {
+    let av = a[key], bv = b[key];
+    if (key === 'fcl'Ù^HOOH	Ý	ÊHÈ]H\ÙQØ]
+]HÈH\ÙQØ]
+HÈBY
+]H]\LH
+ÛÜ\ÂY
+]H]\H
+ÛÜ\Â]\ÂJNÂÝ\[YÙHHNÂ[\XJ
+NÂBËÈOOOOOOOOOOOOOOOOOOOHÒTÈOOOOOOOOOOOOOOOOOOOB[Ý[Û\ÝÞPÚ\
+Y
+HÈY
+Ú\ÖÚYJHÈÚ\ÖÚYK\ÝÞJ
+NÈÚ\ÖÚYHH[ÈHB[Ý[Û[\Ú\Ê
+HÂÛÛÝYÙÐHH
+Ù^JHOÂÛÛÝHHßNÂ[\Y]KÜXXÚ
+OÈÛÛÝÈHÚÙ^WH	ø $ÉÎÈVÚ×HH
+VÚ×H
+H
+ÈNÈJNÂ]\ØXÝ[Y\ÊJKÛÜ
+
+KHOÌWHHVÌWJNÂNÂËÈKÓÜÙ[X[H
+\
+È[HXÝ[][YJB\ÝÞPÚ\
+	ØÚ\Ù[IÊNÂÛÛÝ[ÙYZÜÈHË]ÈÙ]
+[]KX\
+OÙ[X[JK[\ÛÛX[JWKÛÜ
+
+KHO\ÙR[
+K\XÙJ×ÙË	ÉÊJHH\ÙR[
+\XÙJ×ÙË	ÉÊJB
+NÂÛÛÝÙ[SX\HßNÂ[\Y]KÜXXÚ
+OÈY
+Ù[X[JHÙ[SX\ÜÙ[X[WHH
+Ù[SX\ÜÙ[X[WH
+H
+ÈNÈJNÂÛÛÝÙ[U[ÈH[ÙYZÜËX\
+ÈOÙ[SX\Ü×H
+NÂ]XÝ[HHÂÛÛÝÙ[PXÝ[HHÙ[U[ËX\
+OÈXÝ[H
+ÏHÈ]\XÝ[NÈJNÂÚ\ÖÉØÚ\Ù[I×HH]ÈÚ\
+ØÝ[Y[Ù][[Y[RY
+	ØÚ\Ù[IÊKÂ]NÂX[Î[ÙYZÜËX\
+ÈOË\XÙJ	ÔÑSPSH	Ë	ÉÊJK]\Ù]ÎÂÈ\N	Ø\ËX[	ÑÓÙ[X[IË]NÙ[U[ËXÚÙÜÝ[ÛÛÜ	ÜØJÍËNKÍKÊIËÜ\Y]\Î
+KÈ\N	Û[IËX[	ÐXÝ[][YÉË]NÙ[PXÝ[KÜ\ÛÛÜ	ÈÌMLÍIËXÚÙÜÝ[ÛÛÜ	ÜØJMË
+ÍJIË[Ú[ÛÚ[Y]\Î
+P^\ÒQ	ÞLË[YHBBKÜ[ÛÎÂ\ÜÛÚ]NYKXZ[Z[\ÜXÝ][Î[ÙKØØ[\ÎÂNÈ]NÈ\Ü^NYK^	ÑÓÜÙ[X[IËÛÈÚ^NLHHKYÚ[]\ÎYHKLÈÜÚ][Û	ÜYÚ	Ë]NÈ\Ü^NYK^	ÐXÝ[KËÛÈÚ^NLHHKÜYÈ]ÓÛÚ\\XN[ÙHHBKYÚ[ÎÈYÙ[ÈÜÚ][Û	ØÝÛIËX[ÎÈÞÚYLÛÈÚ^NLHHHHBBJNÂËÈ\Ý[ÈÝYÚ]\ÝÞPÚ\
+	ØÚ\\Ý	ÊNÂÛÛÝ\Ý]HHYÙÐJ	Ù\Ý[ÉÊK[\OÌHOOH	ø $ÉÊKÛXÙJL
+NÂÚ\ÖÉØÚ\\Ý	×HH]ÈÚ\
+ØÝ[Y[Ù][[Y[RY
+	ØÚ\\Ý	ÊKÂ\N	ÙÝYÚ]	Ë]NÈX[Î\Ý]KX\
+OÌJK]\Ù]ÎÞÈ]N\Ý]KX\
+OÌWJKXÚÙÜÝ[ÛÛÜÓÓÔËÜ\ÚYWHKÜ[ÛÎÂ\ÜÛÚ]NYKXZ[Z[\ÜXÝ][Î[ÙKYÚ[ÎÂYÙ[ÈÜÚ][Û	ÜYÚ	ËX[ÎÈÞÚYLÛÈÚ^NLHHHKÛÛ\ÈØ[XÚÜÎÈX[[Ý[Û
+Ý
+HÈÛÛÝÝ[HÝ]\Ù]]KYXÙJ
+KHOH
+È
+NÈ]\	ØÝX[N	ØÝ]ßH
+	ÓX]Ý[
+Ý]ÈÈÝ[
+L
+_IJXÈHHBBBJNÂËÈË]Y\H\Ü^Û[\ÝÞPÚ\
+	ØÚ\]ÊNÂÛÛÝ]]HHYÙÐJ	Û]Y\IÊK[\OÌHOOH	ËIÈ	ÌHOOH	ø $ÉÊKÛXÙJ
+NÂÚ\ÖÉØÚ\]×HH]ÈÚ\
+ØÝ[Y[Ù][[Y[RY
+	ØÚ\]ÊKÂ\N	Ø\Ë]NÈX[Î]]KX\
+OÌJK]\Ù]ÎÞÈX[	ÑÓ	Ë]N]]KX\
+OÌWJKXÚÙÜÝ[ÛÛÜÓÓÔËÛXÙJ
+KÜ\Y]\Î
+WHKÜ[ÛÎÂ[^^\Î	ÞIË\ÜÛÚ]NYKXZ[Z[\ÜXÝ][Î[ÙKYÚ[ÎÈYÙ[È\Ü^N[ÙHHKØØ[\ÎÈÈYÚ[]\ÎYHHBBJNÂËÈ
+ÓYB\ÝÞPÚ\
+	ØÚ\Û	ÊNÂÛÛÝÛ]HHYÙÐJ	ÜÛ	ÊK[\OÌHOOH	ËIÈ	ÌHOOH	ø $ÉÊNÂÚ\ÖÉØÚ\Û	×HH]ÈÚ\
+ØÝ[Y[Ù][[Y[RY
+	ØÚ\Û	ÊKÂ\N	ÜYIË]NÈX[ÎÛ]KX\
+OÌJK]\Ù]ÎÞÈ]NÛ]KX\
+OÌWJKXÚÙÜÝ[ÛÛÜÉÈÌMÙXË	ÈÌMLÍIË	ÈÙMÍÌ
+Ë	ÈÍØÌØYY	Ë	ÈÙÌ×KÜ\ÚYWHKÜ[ÛÎÂ\ÜÛÚ]NYKXZ[Z[\ÜXÝ][Î[ÙKYÚ[ÎÈYÙ[ÈÜÚ][Û	ØÝÛIËX[ÎÈÞÚYLÛÈÚ^NLHHHHBBJNÂËÈ
+KXÚÚ[ÈÝYÚ]\ÝÞPÚ\
+	ØÚ\XÚÉÊNÂÛÛÝXÚÐ\ÙHHÉÕU	Ë	ÐTÓIË	Ñ	Ë	ÔÑ×NÂÛÛÝXÚÓX\HßNÂ[\Y]KÜXXÚ
+OÂY
+\XÚÚ[ÊH]\ÂÛÛÝÙ^HHXÚÐ\ÙK[
+OXÚÚ[Ë[ÛY\Ê
+JHXÚÚ[ÎÂXÚÓX\ÚÙ^WHH
+XÚÓX\ÚÙ^WH
+H
+ÈNÂJNÂÛÛÝXÚÑ[Y\ÈHØXÝ[Y\ÊXÚÓX\
+KÛÜ
+
+KHOÌWHHVÌWJNÂÚ\ÖÉØÚ\XÚÉ×HH]ÈÚ\
+ØÝ[Y[Ù][[Y[RY
+	ØÚ\XÚÉÊKÂ\N	ÙÝYÚ]	Ë]NÈX[ÎXÚÑ[Y\ËX\
+OÌJK]\Ù]ÎÞÈ]NXÚÑ[Y\ËX\
+OÌWJKXÚÙÜÝ[ÛÛÜÉÈÙÍÍÉË	ÈÌLXË	ÈÍXLÌ	Ë	ÈÙXMNÉË	ÈÍÌÎØI×KÜ\ÚYWHKÜ[ÛÎÂ\ÜÛÚ]NYKXZ[Z[\ÜXÝ][Î[ÙKYÚ[ÎÈYÙ[ÈÜÚ][Û	ØÝÛIËX[ÎÈÞÚYLÛÈÚ^NLHHHHBBJNÂËÈ
+ÜY\È\\ÝÞPÚ\
+	ØÚ\Y\ÉÊNÂÛÛÝY\ÓÜ\HÉÑSTÉË	ÑPTÉË	ÓPTÉË	ÐPS	Ë	ÓPVSÉË	ÒSSÉË	ÒSSÉË	ÐQÓÔÕÉË	ÔÑTQSPIË	ÓÐÕPIË	ÓÕQSPIË	ÑPÒQSPI×NÂÛÛÝY\ÓX\HßNÂ[\Y]KÜXXÚ
+OÈY
+Y\ÊHY\ÓX\ÜY\×HH
+Y\ÓX\ÜY\×H
+H
+ÈNÈJNÂÛÛÝXÝ]SY\Ù\ÈHY\ÓÜ\[\HOY\ÓX\ÛWJNÂÚ\ÖÉØÚ\Y\É×HH]ÈÚ\
+ØÝ[Y[Ù][[Y[RY
+	ØÚ\Y\ÉÊKÂ\N	Ø\Ë]NÈX[ÎXÝ]SY\Ù\Ë]\Ù]ÎÞÈX[	ÑÓ	Ë]NXÝ]SY\Ù\ËX\
+HOY\ÓX\ÛWH
+KXÚÙÜÝ[ÛÛÜÓÓÔËÜ\Y]\ÎWHKÜ[ÛÎÂ\ÜÛÚ]NYKXZ[Z[\ÜXÝ][Î[ÙKYÚ[ÎÈYÙ[È\Ü^N[ÙHHKØØ[\ÎÈNÈYÚ[]\ÎYHHBBJNÂËÈ
+ËÚ\\È\Ý[ÈÜÝ\Y\\ÝÞPÚ\
+	ØÚ\Ú\\Ý	ÊNÂÛÛÝ\Ý[ÈHYÙÐJ	Ù\Ý[ÉÊK[\OÌHOOH	ø $ÉÊKÛXÙJ
+KX\
+OÌJNÂÛÛÝÚ\X\HÈ	ÑQÓÐIÎßK	ÐUÑÓÐIÎßHNÂ[\Y]KÜXXÚ
+OÂY
+Ú\\	\Ý[È	\Ý[Ë[ÛY\Ê\Ý[ÊJHÂY
+\Ú\X\ÜÚ\\JHÚ\X\ÜÚ\\HHßNÂÚ\X\ÜÚ\\VÜ\Ý[×HH
+Ú\X\ÜÚ\\VÜ\Ý[×H
+H
+ÈNÂBJNÂÚ\ÖÉØÚ\Ú\\Ý	×HH]ÈÚ\
+ØÝ[Y[Ù][[Y[RY
+	ØÚ\Ú\\Ý	ÊKÂ\N	Ø\Ë]NÂX[Î\Ý[Ë]\Ù]ÎÂÈX[	ÑQÓÐIË]N\Ý[ËX\
+O
+Ú\X\ÉÑQÓÐI×HßJVÙH
+KXÚÙÜÝ[ÛÛÜ	ÜØJÍËNKÍK
+IËÜ\Y]\Î
+KÈX[	ÐUÑÓÐIË]N\Ý[ËX\
+O
+Ú\X\ÉÐUÑÓÐI×HßJVÙH
+KXÚÙÜÝ[ÛÛÜ	ÜØJMË
+Í
+IËÜ\Y]\Î
+BBKÜ[ÛÎÂ\ÜÛÚ]NYKXZ[Z[\ÜXÝ][Î[ÙKYÚ[ÎÈYÙ[ÈÜÚ][Û	ØÝÛIËX[ÎÈÞÚYLÛÈÚ^NLHHHHKØØ[\ÎÈÈÝXÚÙY[ÙHKNÈYÚ[]\ÎYKÝXÚÙY[ÙHHBBJNÂBËÈOOOOOOOOOOOOOOOOOOOHVÔÔÕOOOOOOOOOOOOOOOOOOOB[Ý[Û^ÜÔÕ
+HÂÛÛÝ4 headers = ['FCL', 'Semana', 'Mes', 'Shipper', 'Destino', 'Naviera', 'POL', 'POD', 'ETD', 'ETA', 'TT', 'Fecha Cargue', 'Packing', 'Consignee', 'Nave', 'Contenedor'];
+  const keys = ['fcl', 'semana', 'mes', 'shipper', 'destino', 'naviera', 'pol', 'pod', 'etd', 'eta', 'tt', 'fecha_cargue', 'packing', 'consignee', 'nave', 'contenedor'];
+
+  let csv = headers.join(',') + '\n';
+  filteredData.forEach(r => {
+    csv += keys.map(k => {
+      const v = String(r[k] || '');
+      return v.includes(',') ? `"${v}"` : v;
+    }).join(',') + '\n';
+  });
+
+  const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `Despachos_Palta_${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+}
+
+// ==================== INIT ====================
+loadApiUrl();
+</script>
+</body>
+</html>
