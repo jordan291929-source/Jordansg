@@ -292,28 +292,20 @@ async function sendData() {
 
     const response = await fetch(url, {
       method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify(payload)
+      body: JSON.stringify(payload),
+      redirect: 'follow'
     });
 
-    // Con no-cors no podemos leer la respuesta, pero si no hay error, asumimos éxito
-    // Para verificar, hacemos un GET
-    setTimeout(async () => {
-      try {
-        const check = await fetch(url + '?action=meta', { method: 'GET' });
-        const meta = await check.json();
-        if (meta.success) {
-          showStatus(`✅ Dashboard actualizado exitosamente — ${meta.totalRows} registros — ${new Date(meta.lastUpdate).toLocaleString('es-PE')}`, 'success');
-        } else {
-          showStatus('⚠️ Datos enviados. Verifica en Google Sheets que se actualizó correctamente.', 'success');
-        }
-      } catch {
-        showStatus('⚠️ Datos enviados. Verifica en Google Sheets que se actualizó correctamente.', 'success');
-      }
-      btn.disabled = false;
-      btn.innerHTML = '🚀 Actualizar Dashboard en Tiempo Real';
-    }, 3000);
+    const result = await response.json();
+
+    if (result.success) {
+      showStatus(`✅ Dashboard actualizado exitosamente — ${result.message} — ${new Date(result.timestamp).toLocaleString('es-PE')}`, 'success');
+    } else {
+      showStatus('❌ Error: ' + (result.error || 'Respuesta inesperada del servidor'), 'error');
+    }
+
+    btn.disabled = false;
+    btn.innerHTML = '🚀 Actualizar Dashboard en Tiempo Real';
 
   } catch (err) {
     showStatus('Error al enviar: ' + err.message, 'error');
