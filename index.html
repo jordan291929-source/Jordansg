@@ -26,6 +26,10 @@
   .live-dot{display:inline-block;width:8px;height:8px;background:#22c55e;border-radius:50%;margin-right:6px;animation:pulse 2s infinite}
   @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
   .refresh-info{font-size:.7rem;color:rgba(255,255,255,.5)}
+  .btn-refresh{background:rgba(255,255,255,.15);color:#fff;border:1.5px solid rgba(255,255,255,.3);border-radius:10px;padding:6px 16px;font-size:.8rem;font-weight:600;cursor:pointer;transition:all .25s;display:flex;align-items:center;gap:6px}
+  .btn-refresh:hover{background:rgba(255,255,255,.25);border-color:rgba(255,255,255,.5);transform:translateY(-1px)}
+  .btn-refresh:disabled{opacity:.5;cursor:not-allowed;transform:none}
+  .btn-refresh .spin{display:inline-block;animation:spin .8s linear infinite}
 
   .container{max-width:1600px;margin:0 auto;padding:24px}
 
@@ -120,7 +124,8 @@
   </div>
   <div class="header-right">
     <div class="badge"><span class="live-dot"></span> EN VIVO</div>
-    <div class="refresh-info" id="refreshInfo">Auto-refresh cada 5 min</div>
+    <button class="btn-refresh" id="btnRefresh" onclick="manualRefresh()" title="Actualizar ahora">🔄 Actualizar</button>
+      <div class="refresh-info" id="refreshInfo">Auto-refresh cada 5 min</div>
   </div>
 </header>
 
@@ -732,7 +737,31 @@ function exportCSV() {
   a.click();
 }
 
-// ==================== INIT ====================
+// ==================== MANUAL REFRESH ====================
+  async function manualRefresh() {
+    var btn = document.getElementById('btnRefresh');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spin">🔄</span> Actualizando...';
+    try {
+      var response = await fetch(API_URL + '?action=data&t=' + Date.now());
+      var result = await response.json();
+      if (result.success && result.data) {
+        allData = normalizeData(result.data);
+        currentWeek = detectCurrentWeek(allData);
+        var lastUpdate = result.lastUpdate ? new Date(result.lastUpdate).toLocaleString('es-PE') : 'N/A';
+        document.getElementById('headerSub').textContent = currentWeek + ' \u00b7 FRUGLOBE & AVOGLOBE \u00b7 \u00daltima actualizaci\u00f3n: ' + lastUpdate;
+        document.getElementById('refreshInfo').textContent = 'Actualizado: ' + new Date().toLocaleTimeString('es-PE') + ' \u00b7 Auto-refresh cada 5 min';
+        populateFilters();
+        applyFilters();
+      }
+    } catch (e) {
+      console.log('Manual refresh error:', e);
+    }
+    btn.disabled = false;
+    btn.innerHTML = '🔄 Actualizar';
+  }
+
+  // ==================== INIT ====================
 connectApi();
 </script>
 </body>
